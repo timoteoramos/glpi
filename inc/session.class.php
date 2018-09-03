@@ -953,6 +953,25 @@ class Session {
          return false;
       }
 
+      // CHECAGEM ADICIONAL
+      // checagem de quantidade: lista os chamados pendentes
+      $query = "SELECT `id`
+      FROM `glpi_tickets`
+      WHERE `closedate` IS NULL
+      AND `solvedate` IS NOT NULL
+      AND `users_id_recipient` = " . $_SESSION["glpiID"];
+
+      // definindo objetos de sessao
+      $_SESSION["glpiTicketQueue"] = $DB->numrows($DB->query($query));
+      $_SESSION["glpiTicketThreshold"] = 2; // limite de chamados pendentes
+
+      // executa o script adicional apenas ao checar permissoes especificas
+      if (($_SESSION["glpiTicketQueue"] >= $_SESSION["glpiTicketThreshold"])
+          && ((($right & (READ)) && ($module == "reminder_public" || $module == "rssfeed_public"))
+          || (($right & (CREATE)) && ($module === "ticket")))) {
+         return false;
+      }
+
       if (isset($_SESSION["glpiactiveprofile"][$module])) {
          return intval($_SESSION["glpiactiveprofile"][$module]) & $right;
       }
